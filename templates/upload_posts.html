@@ -1,0 +1,184 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Upload Posts{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5">
+  <div class="card shadow-lg border-0 rounded-5 bg-light-subtle">
+    <div class="card-header bg-gradient bg-primary text-white rounded-top py-4">
+      <h4 class="mb-0 d-flex align-items-center">
+        <i class="bi bi-upload me-2 fs-3"></i> Upload Blog Posts via CSV
+      </h4>
+    </div>
+    <div class="card-body px-5 py-5">
+      <form id="uploadForm" action="{{ url_for('upload_posts') }}" method="post" enctype="multipart/form-data" novalidate>
+
+        <!-- Domain Selection -->
+        <div class="mb-4">
+          <label for="db_host" class="form-label fw-semibold text-dark"><i class="bi bi-globe2 me-1"></i> Select Domain</label>
+          <select name="domain_id" id="db_host" class="form-select form-select-lg rounded-4 shadow-sm border-primary" required>
+            <option value="">-- Choose Domain --</option>
+            {% for key, domain in domain_hosts_data.items() %}
+              <option value="{{ key }}">{{ domain.label }} ({{ domain.host }})</option>
+            {% endfor %}
+          </select>
+          <div class="invalid-feedback">Please select a domain.</div>
+        </div>
+
+        <!-- User Selection -->
+        <div class="mb-4">
+          <label for="user-select" class="form-label fw-semibold text-dark"><i class="bi bi-person-circle me-1"></i> Select User</label>
+          <select class="form-select form-select-lg rounded-4 shadow-sm border-primary" id="user-select" name="user_id" required disabled>
+            <option value="" disabled selected>-- Choose a User --</option>
+          </select>
+          <div class="invalid-feedback">Please select a user.</div>
+        </div>
+
+        <!-- Category Selection -->
+        <div class="mb-4">
+          <label for="category-select" class="form-label fw-semibold text-dark"><i class="bi bi-tags me-1"></i> Select Category</label>
+          <select class="form-select form-select-lg rounded-4 shadow-sm border-primary" id="category-select" name="category_id" required disabled>
+            <option value="" disabled selected>-- Choose a Category --</option>
+          </select>
+          <div class="invalid-feedback">Please select a category.</div>
+        </div>
+
+        <!-- Custom Prompts -->
+        <div class="mb-4">
+          <label for="custom_prompts" class="form-label fw-semibold text-dark"><i class="bi bi-lightbulb-fill me-1"></i> Custom Prompts</label>
+          <textarea
+            class="form-control form-control-lg rounded-4 shadow-sm border-primary"
+            id="custom_prompts"
+            name="prompts"
+            rows="5"
+            placeholder="Write each prompt on a new line or separate longer prompts with blank lines."
+            required
+          ></textarea>
+          <div class="invalid-feedback">Please enter at least one prompt.</div>
+          <div class="form-text">Each line = one prompt. Use blank lines to separate paragraphs.</div>
+        </div>
+
+        <!-- CSV File Upload -->
+        <div class="mb-4">
+          <label for="csv_file" class="form-label fw-semibold text-dark"><i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Upload CSV File</label>
+          <input type="file" class="form-control form-control-lg rounded-4 shadow-sm border-primary" id="csv_file" name="csv_file" accept=".csv" required />
+          <div class="invalid-feedback">Please upload a valid CSV file.</div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-grid mt-5">
+          <button type="submit" class="btn btn-success btn-lg fw-bold rounded-4 shadow-sm" id="submitBtn">
+            <i class="bi bi-cloud-upload-fill me-2"></i> Start Upload
+          </button>
+        </div>
+
+        <!-- Upload Progress Bar -->
+        <div class="progress mt-4 rounded-pill shadow-sm" style="height: 28px; display: none" id="uploadProgress">
+          <div
+            class="progress-bar progress-bar-striped progress-bar-animated bg-success fw-semibold text-dark"
+            role="progressbar"
+            style="width: 0%"
+            aria-valuenow="0"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            id="progressBar"
+          >
+            0%
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    $("#db_host").select2({ placeholder: "Select Domain", width: "100%" });
+    $("#category-select").select2({ placeholder: "Select Category", width: "100%" });
+    $("#user-select").select2({ placeholder: "Select User", width: "100%" });
+
+    $("#db_host").on("change", function () {
+      const dbKey = $(this).val();
+      const categorySelect = $("#category-select");
+      const userSelect = $("#user-select");
+
+      categorySelect.prop("disabled", true).html('<option disabled selected>-- Loading Categories --</option>').trigger("change");
+      userSelect.prop("disabled", true).html('<option disabled selected>-- Loading Users --</option>').trigger("change");
+
+      if (dbKey) {
+        // Load categories
+        $.getJSON("/get_categories_by_db_key/" + dbKey, function (data) {
+          categorySelect.empty();
+          if (data.categories?.length) {
+            categorySelect.append('<option disabled selected>-- Select Category --</option>');
+            data.categories.forEach(cat => {
+              categorySelect.append(`<option value="${cat.id}">${cat.name}</option>`);
+            });
+            categorySelect.prop("disabled", false);
+          } else {
+            categorySelect.append('<option disabled selected>-- No Categories Found --</option>');
+          }
+          categorySelect.trigger("change");
+        });
+
+        // Load users (✔ FIXED: changed user.name to user.username)
+        $.getJSON("/get_users_by_db_key/" + dbKey, function (data) {
+          userSelect.empty();
+          if (data.users?.length) {
+            userSelect.append('<option disabled selected>-- Select User --</option>');
+            data.users.forEach(user => {
+              const displayName = user.username || `User ${user.id}`;
+              userSelect.append(`<option value="${user.id}">${displayName}</option>`);
+            });
+            userSelect.prop("disabled", false);
+          } else {
+            userSelect.append('<option disabled selected>-- No Users Found --</option>');
+          }
+          userSelect.trigger("change");
+        });
+      }
+    });
+
+    // Form submission with animated progress bar
+    const form = document.getElementById("uploadForm");
+
+    form.addEventListener("submit", function (event) {
+      form.classList.remove("was-validated");
+      if (!form.checkValidity()) {
+        event.preventDefault();
+        event.stopPropagation();
+        form.classList.add("was-validated");
+        return;
+      }
+
+      event.preventDefault();
+      const progressBar = document.getElementById("progressBar");
+      const progressContainer = document.getElementById("uploadProgress");
+      const submitBtn = document.getElementById("submitBtn");
+
+      progressContainer.style.display = "block";
+      submitBtn.disabled = true;
+
+      let width = 0;
+      const interval = setInterval(() => {
+        if (width < 95) {
+          width += Math.floor(Math.random() * 8) + 3;
+          if (width > 95) width = 95;
+        }
+        progressBar.style.width = width + "%";
+        progressBar.setAttribute("aria-valuenow", width);
+        progressBar.textContent = width + "%";
+
+        if (width >= 95 && !form.dataset.submitted) {
+          clearInterval(interval);
+          form.dataset.submitted = "true";
+          form.submit();
+        }
+      }, 300);
+    });
+  });
+</script>
+{% endblock %}

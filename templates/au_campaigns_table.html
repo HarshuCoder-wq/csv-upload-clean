@@ -1,0 +1,175 @@
+{% extends 'admin_base.html' %}
+
+<style>
+  #campaignsTable thead th,
+  #contentErrorsTable thead th,
+  #imageErrorsTable thead th {
+    vertical-align: middle;
+    font-weight: 600;
+  }
+
+  tbody tr:hover {
+    background-color: #f3f6f9;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .badge {
+    font-size: 0.85rem;
+  }
+</style>
+
+{% block title %}AI Campaigns Log{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4 fw-semibold text-dark">AI Campaigns Log</h2>
+
+  <!-- Campaign Summary Table -->
+  <div class="card shadow-sm border-0 rounded-4 mb-5">
+    <div class="card-body">
+      {% if campaigns %}
+      <div class="table-responsive">
+        <table id="campaignsTable" class="table table-hover align-middle table-striped">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>CSV File Name</th>
+              <th>Total Titles</th>
+              <th>Success Count</th>
+              <th>Fail Count</th>
+              <th>DB Host Key</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for campaign in campaigns %}
+            <tr>
+              <td>{{ campaign.id }}</td>
+              <td class="fw-medium">{{ campaign.csv_file_name }}</td>
+              <td>{{ campaign.total_titles }}</td>
+              <td><span class="badge bg-success px-3 py-2">{{ campaign.success_count }}</span></td>
+              <td><span class="badge bg-danger px-3 py-2">{{ campaign.fail_count }}</span></td>
+              <td><code>{{ campaign.db_host_key }}</code></td>
+              <td>{{ campaign.created_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted fs-5">No AI campaigns found.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Content Errors Table -->
+  <div class="card shadow-sm border-0 rounded-4 mb-5">
+    <div class="card-body">
+      <h5 class="text-dark mb-3">⚠️ Content Generation Errors</h5>
+      {% if content_logs %}
+      <div class="table-responsive">
+        <table id="contentErrorsTable" class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Provider</th>
+              <th>Model</th>
+              <th>Status</th>
+              <th>Error</th>
+              <th>Logged At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in content_logs %}
+            <tr>
+              <td>{{ log.blog_title }}</td>
+              <td>{{ log.provider_name }}</td>
+              <td>{{ log.model_name }}</td>
+              <td>{{ log.status_code or 'N/A' }}</td>
+              <td>{{ log.error_message[:100] }}...</td>
+              <td>{{ log.created_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No content generation errors logged.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Image Errors Table -->
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      <h5 class="text-dark mb-3">🖼️ Image Generation Errors</h5>
+      {% if image_logs %}
+      <div class="table-responsive">
+        <table id="imageErrorsTable" class="table table-striped table-sm">
+          <thead>
+            <tr>
+              <th>Prompt Title</th>
+              <th>Provider</th>
+              <th>Model</th>
+              <th>Status</th>
+              <th>Error</th>
+              <th>Logged At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in image_logs %}
+            <tr>
+              <td>{{ log.blog_title }}</td>
+              <td>{{ log.provider_name }}</td>
+              <td>{{ log.model_name }}</td>
+              <td>{{ log.status_code or 'N/A' }}</td>
+              <td>{{ log.error_message[:100] }}...</td>
+              <td>{{ log.created_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-muted">No image generation errors logged.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    $('#campaignsTable').DataTable({
+      responsive: true,
+      pageLength: 10,
+      order: [[0, 'desc']],
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search campaigns..."
+      }
+    });
+
+    $('#contentErrorsTable').DataTable({
+      responsive: true,
+      pageLength: 5,
+      order: [[5, 'desc']],
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search content errors..."
+      }
+    });
+
+    $('#imageErrorsTable').DataTable({
+      responsive: true,
+      pageLength: 5,
+      order: [[5, 'desc']],
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search image errors..."
+      }
+    });
+  });
+</script>
+{% endblock %}

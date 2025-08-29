@@ -1,0 +1,45 @@
+{% extends 'admin_base.html' %} {% block title %}Question Answering Results{% endblock %}
+{% block content %}
+<div class="container-fluid">
+  <h2 class="mb-4">Question Answering Results</h2>
+
+  <div class="card shadow-sm rounded">
+    <div class="card-body">
+      {% if result.success %}
+      <div class="alert alert-success" role="alert">
+        <strong>Success!</strong> Questions processed and answered.
+      </div>
+
+      <h5 class="mb-3">Processed Questions:</h5>
+      <div class="table-responsive">
+        <table class="table table-hover table-striped">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Question</th>
+              <th>Answer</th>
+              <th>User</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for qa in result.qa_data %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ qa.question }}</td>
+              <td>{{ qa.answer }}</td>
+              <td>{{ users_map.get(qa.user_id, 'Unknown User') }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% else %}
+      <div class="alert alert-danger" role="alert">
+        <strong>Error:</strong> {{ result.error }}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

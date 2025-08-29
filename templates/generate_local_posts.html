@@ -1,0 +1,112 @@
+{% extends "admin_base.html" %}
+
+{% block title %}RSS Feed{% endblock %}
+
+{% block content %}
+<div class="container py-2">
+  <h1 class="mb-4 display-5 fw-bold text-primary d-flex align-items-center gap-2">
+    <i class="fas fa-rss text-primary"></i> RSS Feed
+  </h1>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show shadow-sm" role="alert">
+          <i class="fas fa-info-circle me-2"></i> {{ message | safe }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <!-- Form -->
+  <form method="POST" action="{{ url_for('generate_local_posts_route') }}" enctype="multipart/form-data" class="card shadow-lg border-0 p-4 rounded-4" id="uploadForm">
+
+    <!-- Domain Dropdown -->
+    <div class="mb-4">
+  <label for="db_host" class="form-label fw-semibold text-dark">
+    <i class="bi bi-globe2 me-1"></i> Select Domain
+  </label>
+  <select name="domain_id_for_save" id="db_host" class="form-select form-select-lg rounded-4 shadow-sm border-primary" required>
+    <option value="">-- Choose Domain --</option>
+    {% for key, domain in domain_hosts_data.items() %}
+      <option value="{{ key }}">{{ domain.label }} ({{ domain.host }})</option>
+    {% endfor %}
+  </select>
+  <div class="invalid-feedback">Please select a domain.</div>
+</div>
+
+    <!-- Category Dropdown -->
+    <div class="mb-4">
+      <label for="category_id" class="form-label fw-semibold">📂 Select Category:</label>
+      <select class="form-select select2" id="category_id" name="category_id" required>
+        <option value="">Select a Category</option>
+        {% for category in categories %}
+          <option value="{{ category.id }}">{{ category.name }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Categories are pulled from your local database.</div>
+    </div>
+
+    <!-- User Dropdown -->
+    <div class="mb-4">
+      <label for="user_id" class="form-label fw-semibold">👤 Select User:</label>
+      <select class="form-select select2" id="user_id" name="user_id" required>
+        <option value="">Select a User</option>
+        {% for user in users %}
+          <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+      <div class="form-text">Choose a user to assign the generated posts to.</div>
+    </div>
+
+    <!-- Prompts Textarea -->
+    <div class="mb-4">
+      <label for="prompts" class="form-label fw-semibold">💡 Additional AI Prompts:</label>
+      <textarea class="form-control" id="prompts" name="prompts" rows="5" placeholder="Example:
+Ensure content is over 500 words.
+Include an FAQ section.
+Use SEO-friendly keywords."></textarea>
+      <div class="form-text">Each prompt should be on a new line. Used to guide AI generation.</div>
+    </div>
+
+    <!-- CSV Upload -->
+    <div class="mb-4">
+      <label for="csv_file" class="form-label fw-semibold">📁 Upload CSV File:</label>
+      <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="mb-4 d-none" id="progressContainer">
+      <label class="form-label fw-semibold">Processing...</label>
+      <div class="progress">
+        <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" role="progressbar" style="width: 100%">Generating...</div>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-grid mt-4">
+      <button type="submit" class="btn btn-lg btn-primary shadow-sm">
+        <i class="fas fa-magic me-2"></i> Generate Local Posts and RSS
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- JS Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Select2 Initialization & Progress Bar Logic -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    $('.select2').select2({ width: '100%' });
+
+    document.getElementById('uploadForm').addEventListener('submit', function () {
+      document.getElementById('progressContainer').classList.remove('d-none');
+    });
+  });
+</script>
+{% endblock %}

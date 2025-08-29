@@ -1,0 +1,144 @@
+{% extends 'admin_base.html' %}
+<style>
+  #errorLogsTable thead th {
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  #errorLogsTable tbody tr:hover {
+    background-color: #f9f9f9;
+    transition: background-color 0.2s ease-in-out;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.4em 0.6em;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+</style>
+{% block title %}AI Error Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <h2 class="mb-4 fw-semibold text-dark">AI Error Logs</h2>
+
+  <div class="card shadow-sm border-0 rounded-4">
+    <div class="card-body">
+      {% if error_logs %}
+      <div class="table-responsive">
+        <table id="errorLogsTable" class="table table-striped table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>ID</th>
+              <th>Blog Title</th>
+              <th>Provider</th>
+              <th>Model</th>
+              <th>Status Code</th>
+              <th>Error Message</th>
+              <th>Input Prompt</th>
+              <th>Response</th>
+              <th>Retries</th>
+              <th>Created At</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in error_logs %}
+            <tr>
+              <td>{{ log.id }}</td>
+              <td class="fw-medium" style="font-size: 15px;">{{ log.blog_title }}</td>
+              <td>{{ log.provider_name }}</td>
+              <td><code>{{ log.model_name }}</code></td>
+              <td><span class="badge bg-warning text-dark">{{ log.status_code if log.status_code else 'N/A' }}</span></td>
+              <td>
+                {% set msg = log.error_message | truncate(50, True, '...') %}
+                {{ msg }}
+                {% if log.error_message | length > 50 %}
+                <button class="btn btn-link btn-sm p-0" data-bs-toggle="modal" data-bs-target="#logDetailModal"
+                  data-log-title="Error Message for {{ log.blog_title }}"
+                  data-log-content="{{ log.error_message | e }}">Read More</button>
+                {% endif %}
+              </td>
+              <td>
+                {% set prompt = log.input_prompt | truncate(50, True, '...') %}
+                {{ prompt }}
+                {% if log.input_prompt | length > 50 %}
+                <button class="btn btn-link btn-sm p-0" data-bs-toggle="modal" data-bs-target="#logDetailModal"
+                  data-log-title="Input Prompt for {{ log.blog_title }}"
+                  data-log-content="{{ log.input_prompt | e }}">Read More</button>
+                {% endif %}
+              </td>
+              <td>
+                {% set resp = log.response | truncate(50, True, '...') %}
+                {{ resp }}
+                {% if log.response | length > 50 %}
+                <button class="btn btn-link btn-sm p-0" data-bs-toggle="modal" data-bs-target="#logDetailModal"
+                  data-log-title="Response for {{ log.blog_title }}"
+                  data-log-content="{{ log.response | e }}">Read More</button>
+                {% endif %}
+              </td>
+              <td><span class="badge bg-secondary">{{ log.retry_attempt }}</span></td>
+              <td class="text-muted">{{ log.created_at }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <p class="text-center text-muted fs-5">No AI error logs found.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Log Detail Modal -->
+<div class="modal fade" id="logDetailModal" tabindex="-1" aria-labelledby="logDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-xl">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-dark text-white rounded-top">
+        <h5 class="modal-title" id="logDetailModalLabel">Log Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <h6 id="logModalTitle" class="mb-3 text-danger"></h6>
+        <pre id="logModalContent" class="bg-light p-3 rounded text-wrap small"></pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary rounded" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    $('#errorLogsTable').DataTable({
+      responsive: true,
+      pageLength: 10,
+      order: [[0, 'desc']],
+      lengthMenu: [5, 10, 25, 50, 100],
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search logs..."
+      }
+    });
+
+    $("#logDetailModal").on("show.bs.modal", function (event) {
+      const button = $(event.relatedTarget);
+      const title = button.data("log-title");
+      const content = button.data("log-content");
+
+      const modal = $(this);
+      modal.find("#logModalTitle").text(title);
+      modal.find("#logModalContent").text(content);
+    });
+  });
+</script>
+{% endblock %}

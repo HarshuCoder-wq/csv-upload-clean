@@ -1,0 +1,133 @@
+{% extends 'admin_base.html' %}
+{% block title %}Upload Questions{% endblock %}
+
+{% block content %}
+<!-- Custom Styles -->
+<style>
+  .hover-btn:hover {
+    transform: scale(1.03);
+  }
+
+  .form-control:focus,
+  .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+  }
+
+  #csvSample {
+    font-family: 'Courier New', Courier, monospace;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-gradient bg-primary text-white rounded-top d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-question-circle me-2"></i>Upload Questions CSV for AI Answering
+      </h4>
+      <button class="btn btn-light btn-sm rounded-pill hover-btn" data-bs-toggle="modal" data-bs-target="#sampleCsvModal">
+        <i class="fas fa-clipboard me-1"></i>Sample Format
+      </button>
+    </div>
+    <div class="card-body p-4">
+      <form action="{{ url_for('upload_questions') }}" method="post" enctype="multipart/form-data" novalidate>
+        <!-- Domain Selection -->
+        <div class="mb-3">
+          <label for="db_host_questions" class="form-label fw-semibold">
+            <i class="fas fa-globe me-1"></i>Select Domain
+          </label>
+          <select name="domain_id" id="db_host_questions" class="form-select" required>
+            <option value="">-- Select Domain --</option>
+            {% for key, domain in db_hosts_data.items() %}
+              <option value="{{ key }}">{{ domain.label }} ({{ domain.connection.host }})</option>
+            {% endfor %}
+          </select>
+          <div class="invalid-feedback">Please select a domain.</div>
+        </div>
+
+        <!-- CSV File -->
+        <div class="mb-4">
+          <label for="csv_file_questions" class="form-label fw-semibold">
+            <i class="fas fa-file-csv me-1"></i>Choose CSV File
+          </label>
+          <input type="file" class="form-control" id="csv_file_questions" name="csv_file" accept=".csv" required />
+          <div class="invalid-feedback">Please upload a valid CSV file.</div>
+        </div>
+
+        <!-- Submit -->
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3 hover-btn">
+          <i class="fas fa-upload me-2"></i>Process Questions
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Sample CSV Modal -->
+<div class="modal fade" id="sampleCsvModal" tabindex="-1" aria-labelledby="sampleCsvModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4 shadow">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="sampleCsvModalLabel">
+          <i class="fas fa-file-alt me-2"></i>Sample CSV Format
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="bg-light p-3 rounded border text-dark">
+          <pre id="csvSample" style="white-space: pre-wrap;">question
+What is AI?
+How does machine learning work?
+What are neural networks?
+          </pre>
+        </div>
+        <div class="text-end mt-3">
+          <button class="btn btn-outline-primary rounded-pill hover-btn" onclick="copyCsvSample()">
+            <i class="fas fa-copy me-1"></i>Copy to Clipboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  $(document).ready(function () {
+    $('#db_host_questions').select2({
+      placeholder: "-- Select Domain --",
+      allowClear: true,
+      width: '100%'
+    });
+  });
+
+  function copyCsvSample() {
+    const sampleText = document.getElementById("csvSample").innerText;
+    navigator.clipboard.writeText(sampleText).then(() => {
+      showToast("Sample CSV copied to clipboard!", "bg-success");
+    }).catch((err) => {
+      showToast("Failed to copy: " + err, "bg-danger");
+    });
+  }
+
+  function showToast(message, className) {
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white ${className} border-0 position-fixed bottom-0 end-0 m-4 show`;
+    toast.role = "alert";
+    toast.style.zIndex = 9999;
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hide");
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+</script>
+{% endblock %}

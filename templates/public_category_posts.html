@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>News Posts</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .post { margin-bottom: 40px; border-bottom: 1px solid #ccc; padding-bottom: 20px; }
+        .post img { max-width: 100%; height: auto; }
+        .title { font-size: 22px; font-weight: bold; margin: 10px 0; }
+        .date { color: gray; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <h1>Latest Blog Posts</h1>
+    {% for post in posts %}
+        <div class="post">
+            {% if post.image_url %}
+                <img src="{{ post.image_url }}" alt="Post Image">
+            {% endif %}
+            <div class="title">{{ post.title }}</div>
+            <div class="date">Published on {{ post.published_at.strftime('%B %d, %Y') }} by {{ post.author }}</div>
+            <p>{{ post.content[:300] }}...</p>
+            <a href="/post/{{ post.slug }}">Read more</a>
+        </div>
+    {% endfor %}
+</body>
+</html>

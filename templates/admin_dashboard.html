@@ -1,0 +1,98 @@
+{% extends 'admin_base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<style>
+  .hover-card {
+    transition: transform 0.25s ease-in-out, box-shadow 0.25s ease-in-out;
+  }
+  .hover-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+  }
+  .quick-link:hover {
+    background-color: #f8f9fa;
+    border-left: 4px solid #0d6efd;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  <h2 class="mb-4 fw-bold text-dark">🚀 Welcome to Your AI Dashboard</h2>
+
+  <div class="row g-4">
+    <!-- Upload Posts -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-lg rounded-4 h-100 hover-card bg-gradient bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-primary fw-semibold mb-2">
+            <i class="fas fa-upload me-2"></i>Upload Posts
+          </h5>
+          <p class="card-text text-secondary mb-3">
+            Start a new campaign by uploading post titles via CSV.
+          </p>
+          <a href="{{ url_for('upload_posts') }}" class="btn btn-primary btn-sm rounded-pill px-4">
+            <i class="fas fa-arrow-right me-1"></i>Upload
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- View Campaigns -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-lg rounded-4 h-100 hover-card bg-gradient bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-success fw-semibold mb-2">
+            <i class="fas fa-list-alt me-2"></i>View Campaigns
+          </h5>
+          <p class="card-text text-secondary mb-3">
+            Track progress and status of your AI content campaigns.
+          </p>
+          <a href="{{ url_for('au_campaigns_view') }}" class="btn btn-success btn-sm rounded-pill px-4">
+            <i class="fas fa-eye me-1"></i>View
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Error Logs -->
+    <div class="col-md-6 col-lg-4">
+      <div class="card border-0 shadow-lg rounded-4 h-100 hover-card bg-gradient bg-light">
+        <div class="card-body">
+          <h5 class="card-title text-danger fw-semibold mb-2">
+            <i class="fas fa-exclamation-triangle me-2"></i>Error Logs
+          </h5>
+          <p class="card-text text-secondary mb-3">
+            Check logs of AI generation errors and troubleshoot.
+          </p>
+          <a href="{{ url_for('blog_ai_error_logs_view') }}" class="btn btn-danger btn-sm rounded-pill px-4">
+            <i class="fas fa-bug me-1"></i>Logs
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Links -->
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="card border-0 shadow rounded-4 bg-white">
+        <div class="card-body">
+          <h5 class="card-title mb-4 fw-bold text-dark"><i class="fas fa-bolt text-warning me-2"></i>Quick Links</h5>
+          <div class="list-group list-group-flush">
+            <a href="{{ url_for('upload_questions') }}" class="list-group-item list-group-item-action py-3 quick-link d-flex align-items-center">
+              <i class="fas fa-question-circle me-3 text-primary"></i>Upload Questions
+            </a>
+            <a href="{{ url_for('upload_db_configs') }}" class="list-group-item list-group-item-action py-3 quick-link d-flex align-items-center">
+              <i class="fas fa-database me-3 text-success"></i>Upload Database Configurations
+            </a>
+            <a href="{{ url_for('upload_image') }}" class="list-group-item list-group-item-action py-3 quick-link d-flex align-items-center">
+              <i class="fas fa-image me-3 text-info"></i>Image Uploader
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

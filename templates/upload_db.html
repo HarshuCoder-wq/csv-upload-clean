@@ -1,0 +1,139 @@
+{% extends 'admin_base.html' %}
+{% block title %}Upload DB Configs{% endblock %}
+
+{% block content %}
+<style>
+  .form-control:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25);
+  }
+  .hover-btn:hover {
+    transform: scale(1.03);
+  }
+  .toast {
+    z-index: 9999;
+  }
+</style>
+
+<div class="container-fluid py-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+          <i class="fas fa-info-circle me-2"></i>{{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="card shadow-lg border-0 rounded-4">
+    <div class="card-header bg-danger text-white rounded-top d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">
+        <i class="fas fa-database me-2"></i>Upload Database Configurations
+      </h4>
+      <div>
+        <button class="btn btn-light btn-sm rounded-pill hover-btn me-2" data-bs-toggle="modal" data-bs-target="#sampleDbCsvModal">
+          <i class="fas fa-clipboard-list me-1"></i>Sample Format
+        </button>
+        <a href="{{ url_for('static', filename='samples/sample_db_config.csv') }}" download class="btn btn-outline-light btn-sm rounded-pill hover-btn">
+          <i class="fas fa-download me-1"></i>Download Sample
+        </a>
+      </div>
+    </div>
+
+    <div class="card-body p-4">
+      <p class="text-muted mb-4">
+        Upload a <strong>CSV</strong> file with the fields:
+        <code>db_key</code>, <code>host</code>, <code>user</code>, <code>password</code>, <code>database_name</code>, <code>label</code>.
+        <br>Existing entries with the same <code>db_key</code> will be updated.
+      </p>
+
+      <form action="{{ url_for('upload_db_configs') }}" method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        <div class="mb-4">
+          <label for="csv_file" class="form-label fw-semibold">
+            <i class="fas fa-file-csv me-2 text-danger"></i>Choose CSV File
+          </label>
+          <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv" required />
+          <div class="invalid-feedback">Please upload a valid CSV file.</div>
+        </div>
+
+        <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3 hover-btn">
+          <i class="fas fa-upload me-2"></i>Upload DB Configs
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Sample CSV Modal -->
+<div class="modal fade" id="sampleDbCsvModal" tabindex="-1" aria-labelledby="sampleDbCsvModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content rounded-4">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="sampleDbCsvModalLabel">
+          <i class="fas fa-file-alt me-2"></i>Sample CSV Format
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <pre id="dbCsvSample" class="bg-light p-3 rounded border text-dark" style="white-space: pre-wrap;">
+db_key,host,user,password,database_name,label
+main_db,localhost,root,root123,maindb,Main Database
+client_1_db,192.168.1.12,client_user,pass123,clientdb,Client 1 DB
+        </pre>
+        <div class="text-end mt-3">
+          <button class="btn btn-outline-danger rounded-pill hover-btn" onclick="copyDbCsvSample()">
+            <i class="fas fa-copy me-1"></i>Copy to Clipboard
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Bootstrap validation
+  (function () {
+    'use strict'
+    const forms = document.querySelectorAll('.needs-validation')
+    Array.from(forms).forEach(form => {
+      form.addEventListener('submit', event => {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    });
+  })();
+
+  function copyDbCsvSample() {
+    const sampleText = document.getElementById("dbCsvSample").innerText;
+    navigator.clipboard.writeText(sampleText).then(() => {
+      showToast("Sample CSV copied to clipboard!", "bg-success");
+    }).catch(err => {
+      showToast("Failed to copy: " + err, "bg-danger");
+    });
+  }
+
+  function showToast(message, bgColor) {
+    const toast = document.createElement("div");
+    toast.className = `toast align-items-center text-white ${bgColor} border-0 position-fixed bottom-0 end-0 m-4 show`;
+    toast.role = "alert";
+    toast.innerHTML = `
+      <div class="d-flex">
+        <div class="toast-body">${message}</div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>`;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+      toast.classList.remove("show");
+      toast.classList.add("hide");
+      setTimeout(() => toast.remove(), 500);
+    }, 3000);
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "admin_base.html" %}
+
+{% block title %}Local Posts Results{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="display-4 fw-bold mb-4 text-dark">📃 Recently Generated Local Posts</h1>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="mb-4">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'danger' else 'info' }} alert-dismissible fade show border-start border-4 rounded shadow-sm" role="alert">
+                        {{ message | safe }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Display current selection -->
+    {% if selected_domain_label or category_name %}
+    <div class="alert alert-info border-start border-4 p-4 mb-4 rounded shadow-sm" role="alert">
+        <p class="fw-bold">Displaying Posts For:</p>
+        {% if selected_domain_label %}
+            <p><strong>Domain:</strong> {{ selected_domain_label }}</p>
+        {% endif %}
+        {% if category_name %}
+            <p><strong>Category:</strong> {{ category_name }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Domain Filter Form -->
+    <div class="card shadow-sm p-4 rounded-3 mb-4">
+        <form method="GET" action="{{ url_for('local_posts_results') }}" id="filterForm">
+            <div class="mb-3">
+                <label for="domain_id" class="form-label fw-semibold">Select Domain to Filter:</label>
+                <select class="form-select select2" id="domain_id" name="selected_domain_id">
+                    <option value="">All Domains</option>
+                    {% for key, domain in domain_hosts_data.items() %}
+                        <option value="{{ key }}" {% if selected_domain_id == key %}selected{% endif %}>{{ domain.label }}</option>
+                    {% endfor %}
+                </select>
+                <div class="form-text">Filter posts by a specific domain.</div>
+            </div>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-filter me-2"></i> Filter Posts
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Feed by Categories Section -->
+    {% if categories_with_posts %}
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">Feed by Categories for <span class="text-primary">{{ selected_domain_label }}</span></h4>
+            <a href="{{ url_for('admin_rss_category_index') }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-rss"></i> View All Categories
+            </a>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            {% for cat in categories_with_posts %}
+            <div class="col">
+                <div class="card border shadow-sm rounded-3">
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ cat.name }}</h5>
+                        <p class="card-text small text-muted">Posts: {{ cat.post_count }}</p>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-sm btn-outline-primary rounded-pill" href="/{{ selected_domain_label }}/{{ cat.slug }}" target="_blank">
+                                <i class="bi bi-eye"></i> View Posts
+                            </a>
+                            <a class="btn btn-sm btn-outline-success rounded-pill" href="{{ url_for('rss_feed_by_domain_and_category', domain_id=selected_domain_id, category_id=cat.id) }}" target="_blank">
+                                <i class="bi bi-rss"></i> View RSS
+                            </a>
+                            <a class="btn btn-sm btn-outline-dark rounded-pill" href="{{ url_for('rss_feed_by_domain_and_category', domain_id=selected_domain_id, category_id=cat.id) }}" download>
+                                <i class="bi bi-download"></i> Download XML
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RSS Feed View Button -->
+    {% if selected_domain_id or selected_category_id %}
+        <div class="mb-4">
+            <a href="{{ url_for('download_local_rss', category_id=selected_category_id, domain_id=selected_domain_id) }}"
+               class="btn btn-success d-inline-flex align-items-center gap-2 rounded-pill shadow-sm"
+               target="_blank">
+                <i class="fas fa-rss me-1"></i> View RSS for
+                {% if category_name %}{{ category_name }}{% else %}All Categories{% endif %}
+                {% if selected_domain_label %}({{ selected_domain_label }}){% else %}(All Domains){% endif %}
+            </a>
+        </div>
+    {% else %}
+        <p class="mb-4 text-muted fst-italic">No filters applied. Select a domain above or generate posts to enable specific RSS views.</p>
+    {% endif %}
+
+    <!-- Posts Grid -->
+    {% if posts %}
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 g-4">
+            {% for post in posts %}
+                <div class="col">
+                    <div class="card h-100 shadow-sm border rounded overflow-hidden">
+                        {% if post.image_url %}
+                            <img src="{{ post.image_url }}" alt="{{ post.title }}" class="card-img-top" style="height: 208px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-light text-muted d-flex align-items-center justify-content-center" style="height: 208px;">No Image</div>
+                        {% endif %}
+                        <div class="card-body p-4">
+                            <h2 class="card-title fs-5 fw-semibold mb-2">{{ post.title }}</h2>
+                            <p class="card-text text-secondary mb-3">{{ post.summary }}</p>
+                            <div class="text-body small mb-4">
+                                {{ post.content | safe }}
+                            </div>
+                            <p class="text-muted small">🕒 {{ post.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            {% if post.domain_label %}
+                                <p class="text-muted small">Domain: {{ post.domain_label }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-secondary">No local posts found for the selected filters. Use the "Generate Local Posts (RSS)" page to get started!</p>
+    {% endif %}
+</div>
+
+<!-- JS Dependencies -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
+<script>
+    $(document).ready(function() {
+        $('.select2').select2({
+            theme: "bootstrap-5",
+            width: '100%'
+        });
+
+        var currentDomainId = '{{ selected_domain_id if selected_domain_id else "" }}';
+        if (currentDomainId) {
+            $('#domain_id').val(currentDomainId).trigger('change');
+        }
+    });
+</script>
+{% endblock %}

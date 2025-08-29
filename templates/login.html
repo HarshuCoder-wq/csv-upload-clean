@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Admin Panel</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+
+      body,
+      html {
+        height: 100%;
+        margin: 0;
+        font-family: "Inter", sans-serif;
+        background: linear-gradient(135deg, #6e8efb, #a777e3);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .login-card {
+        background: #fff;
+        border-radius: 1rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        max-width: 450px;
+        width: 100%;
+        overflow: hidden;
+      }
+
+      .card-header {
+        background: linear-gradient(to right, #4a00e0, #8e2de2);
+        color: #fff;
+        text-align: center;
+        padding: 1.75rem 1rem;
+      }
+
+      .card-header h4 {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+      }
+
+      .form-label {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      .form-control {
+        border-radius: 0.5rem;
+      }
+
+      .form-control:focus {
+        border-color: #8e2de2;
+        box-shadow: 0 0 0 0.2rem rgba(142, 45, 226, 0.25);
+      }
+
+      .btn-primary {
+        background-color: #8e2de2;
+        border: none;
+        font-weight: 500;
+      }
+
+      .btn-primary:hover {
+        background-color: #7a1fdd;
+      }
+
+      .alert {
+        font-size: 0.95rem;
+      }
+
+      .input-group-text {
+        background: #f5f5f5;
+        border-radius: 0 0.5rem 0.5rem 0;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container px-3">
+      <div class="card login-card">
+        <div class="card-header">
+          <h4>👋 Welcome Back</h4>
+          <small class="fw-light">Admin Panel Login</small>
+        </div>
+        <div class="card-body p-4">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+              {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show rounded shadow-sm" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            {% endif %}
+          {% endwith %}
+
+          <form action="{{ url_for('login') }}" method="post">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username" required autofocus />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <div class="input-group">
+                <input type="password" class="form-control" id="password" name="password" required />
+                <span class="input-group-text" onclick="togglePassword()">
+                  <i id="toggleIcon" class="fa fa-eye"></i>
+                </span>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 mt-3 rounded">Login</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bootstrap + FontAwesome JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      function togglePassword() {
+        const passwordField = document.getElementById("password");
+        const icon = document.getElementById("toggleIcon");
+        if (passwordField.type === "password") {
+          passwordField.type = "text";
+          icon.classList.replace("fa-eye", "fa-eye-slash");
+        } else {
+          passwordField.type = "password";
+          icon.classList.replace("fa-eye-slash", "fa-eye");
+        }
+      }
+    </script>
+  </body>
+</html>
